@@ -111,7 +111,6 @@ def upload_transactions_csv(request):
 
         except Exception as e:
             errors.append({"line": line_number, "row": row, "error": str(e)})
-
     with db_transaction.atomic():
         Transaction.objects.bulk_create(transactions_to_create, ignore_conflicts=True)
 
