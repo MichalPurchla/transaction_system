@@ -1,0 +1,38 @@
+[project]
+name = "transaction-system"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Michał Purchla",email = "michalpurchla@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django (>=5.2.4,<6.0.0)",
+    "django-filter (>=25.1,<26.0)",
+    "coverage (>=7.9.2,<8.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+isort = "^6.0.1"
+flake8 = "^7.3.0"
+mypy = "^1.16.1"
+pre-commit = "^4.2.0"
+
+[tool.black]
+line-length = 120
+
+[tool.flake8]
+max-line-length = 120
+
+[tool.isort]
+profile = "black"
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
