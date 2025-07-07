@@ -39,7 +39,7 @@ For every request, you must add the authorization header:
 Authorization: Bearer 1a9b7f47c9454e4fb8d1e2aa9013f6d4
 ```
 
-### POST CSV File:
+### Upload csv file example:
 ```
 curl -X POST -H "Authorization: Bearer 1a9b7f47c9454e4fb8d1e2aa9013f6d4" -F "file=@your_file_name.csv" http://localhost:8080/transactions/upload/
 ```

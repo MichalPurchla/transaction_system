@@ -21,5 +21,5 @@ FROM base as local
 ENTRYPOINT python manage.py migrate && python manage.py runserver 0.0.0.0:${PORT}
 
 FROM base as testing
-ENTRYPOINT coverage run --source='.' manage.py test && coverage report
+ENTRYPOINT pytest -v --tb=short
 
