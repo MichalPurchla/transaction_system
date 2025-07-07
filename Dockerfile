@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+ENV PORT=${PORT}
 WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./
@@ -17,7 +18,7 @@ RUN poetry config virtualenvs.create false \
 COPY . .
 
 FROM base as local
-ENTRYPOINT python manage.py migrate && python manage.py runserver 0.0.0.0:8000
+ENTRYPOINT python manage.py migrate && python manage.py runserver 0.0.0.0:${PORT}
 
 FROM base as testing
 ENTRYPOINT coverage run --source='.' manage.py test && coverage report

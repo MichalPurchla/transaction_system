@@ -1,4 +1,4 @@
-import uuid
+from logging import getLogger
 
 from django.db.models import Max, Sum
 from django.http import JsonResponse
@@ -7,6 +7,8 @@ from django.views.decorators.http import require_GET
 
 from reports.utils import parse_date_range
 from transactions.models import Customer, Product, Transaction
+
+logger = getLogger(__name__)
 
 EXCHANGE_RATES = {
     "PLN": 1,
@@ -17,12 +19,7 @@ EXCHANGE_RATES = {
 
 @require_GET
 def customer_summary(request, customer_id):
-    try:
-        customer_uuid = uuid.UUID(customer_id)
-    except ValueError:
-        return JsonResponse({"error": "Invalid UUID."}, status=400)
-
-    customer = get_object_or_404(Customer, pk=customer_uuid)
+    customer = get_object_or_404(Customer, id=customer_id)
 
     from_date, to_date = parse_date_range(request)
     transactions = Transaction.objects.filter(customer=customer)
@@ -35,7 +32,7 @@ def customer_summary(request, customer_id):
     if not transactions.exists():
         return JsonResponse(
             {
-                "customer_id": str(customer_uuid),
+                "customer_id": str(customer_id),
                 "total_spent_pln": 0,
                 "unique_products": 0,
                 "last_transaction_date": None,
@@ -52,7 +49,7 @@ def customer_summary(request, customer_id):
 
     return JsonResponse(
         {
-            "customer_id": str(customer_uuid),
+            "customer_id": str(customer_id),
             "total_spent_pln": round(total_spent, 2),
             "unique_products": unique_products,
             "last_transaction_date": last_transaction_date,
@@ -62,12 +59,7 @@ def customer_summary(request, customer_id):
 
 @require_GET
 def product_summary(request, product_id):
-    try:
-        product_uuid = uuid.UUID(product_id)
-    except ValueError:
-        return JsonResponse({"error": "Invalid UUID."}, status=400)
-
-    product = get_object_or_404(Product, pk=product_uuid)
+    product = get_object_or_404(Product, id=product_id)
 
     from_date, to_date = parse_date_range(request)
     transactions = Transaction.objects.filter(product=product)
@@ -80,7 +72,7 @@ def product_summary(request, product_id):
     if not transactions.exists():
         return JsonResponse(
             {
-                "product_id": str(product_uuid),
+                "product_id": str(product_id),
                 "total_quantity_sold": 0,
                 "total_revenue_pln": 0,
                 "unique_customers": 0,
@@ -98,7 +90,7 @@ def product_summary(request, product_id):
 
     return JsonResponse(
         {
-            "product_id": str(product_uuid),
+            "product_id": str(product_id),
             "total_quantity_sold": total_quantity,
             "total_revenue_pln": round(total_revenue, 2),
             "unique_customers": unique_customers,

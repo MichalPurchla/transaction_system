@@ -2,14 +2,17 @@ import csv
 import io
 import uuid
 from datetime import datetime
+from logging import getLogger
 
-from django.db import transaction as db_transaction
 from django.http import Http404, JsonResponse
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 
 from transactions.models import Customer, Product, Transaction
+
+logger = getLogger(__name__)
 
 
 class TransactionListView(ListView):
@@ -51,10 +54,12 @@ class TransactionListView(ListView):
 
 
 class TransactionDetailView(View):
-    def get(self, transaction_id):
+    def get(self, request, *args, **kwargs):
+        transaction_id = kwargs["transaction_id"]
         try:
             transaction = Transaction.objects.get(transaction_id=transaction_id)
         except Transaction.DoesNotExist:
+            logger.warning(f"Transaction with id={transaction_id} not found")
             raise Http404("Transaction not found")
 
         data = {
@@ -69,6 +74,7 @@ class TransactionDetailView(View):
         return JsonResponse(data)
 
 
+@csrf_exempt
 @require_POST
 def upload_transactions_csv(request):
     if "file" not in request.FILES:
@@ -82,7 +88,7 @@ def upload_transactions_csv(request):
     io_string = io.StringIO(decoded_file)
     reader = csv.DictReader(io_string)
 
-    transactions_to_create = []
+    transactions_inserted = 0
     errors = []
     line_number = 1
 
@@ -97,21 +103,18 @@ def upload_transactions_csv(request):
             product_id = uuid.UUID(row["product_id"])
             quantity = int(row["quantity"])
 
-            transactions_to_create.append(
-                Transaction(
-                    transaction_id=transaction_id,
-                    timestamp=timestamp,
-                    amount=amount,
-                    currency=currency,
-                    customer_id=Customer.objects.get(id=customer_id),
-                    product_id=Product.objects.get(id=product_id),
-                    quantity=quantity,
-                )
+            Transaction.objects.create(
+                transaction_id=transaction_id,
+                timestamp=timestamp,
+                amount=amount,
+                currency=currency,
+                customer=Customer.objects.get(id=customer_id),
+                product=Product.objects.get(id=product_id),
+                quantity=quantity,
             )
-
+            transactions_inserted += 1
         except Exception as e:
             errors.append({"line": line_number, "row": row, "error": str(e)})
-    with db_transaction.atomic():
-        Transaction.objects.bulk_create(transactions_to_create, ignore_conflicts=True)
+            logger.error(f"Błąd podczas przetwarzania CSV w linii {line_number} | row={row} | error={e}")
 
-    return JsonResponse({"inserted": len(transactions_to_create), "errors": errors}, status=201)
+    return JsonResponse({"inserted": transactions_inserted, "errors": errors}, status=201)
