@@ -52,3 +52,8 @@ class TestTransactionDetailView:
         response = auth_client.get(url)
 
         assert response.status_code == 404
+
+    def test_no_auth_token(self, client):
+        url = reverse("transaction_detail", args=[self.transaction.transaction_id])
+        response = client.get(url)
+        assert response.status_code == 403
