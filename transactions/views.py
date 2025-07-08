@@ -16,6 +16,39 @@ logger = getLogger(__name__)
 
 
 class TransactionListView(ListView):
+    """
+    Returns a paginated list of transactions with optional filtering.
+
+    Query Parameters:
+        customer_id (str, optional): UUID of the customer to filter transactions.
+        product_id (str, optional): UUID of the product to filter transactions.
+        page (int, optional): Page number for pagination.
+
+    Pagination:
+        Default page size: 50 transactions per page.
+
+    Response (200 OK):
+        {
+            "count": int,
+            "num_pages": int,
+            "current_page": int,
+            "has_next": bool,
+            "has_previous": bool,
+            "transactions": [
+                {
+                    "transaction_id": str,
+                    "timestamp": str (ISO 8601),
+                    "amount": str,
+                    "currency": str,
+                    "customer_id": str,
+                    "product_id": str,
+                    "quantity": int
+                },
+                ...
+            ]
+        }
+    """
+
     model = Transaction
     paginate_by = 50
 
@@ -54,6 +87,27 @@ class TransactionListView(ListView):
 
 
 class TransactionDetailView(View):
+    """
+    Returns the details of a single transaction by its UUID.
+
+    Path Parameters:
+        transaction_id (str): UUID of the transaction.
+
+    Response (200 OK):
+        {
+            "transaction_id": str,
+            "timestamp": str (ISO 8601),
+            "amount": str,
+            "currency": str,
+            "customer_id": str,
+            "product_id": str,
+            "quantity": int
+        }
+
+    Response (404 Not Found):
+        Returned if the transaction with the specified UUID does not exist.
+    """
+
     def get(self, request, *args, **kwargs):
         transaction_id = kwargs["transaction_id"]
         try:
@@ -77,6 +131,50 @@ class TransactionDetailView(View):
 @csrf_exempt
 @require_POST
 def upload_transactions_csv(request):
+    """
+    Uploads a CSV file to bulk create transactions in the system.
+
+    Request:
+        Multipart form-data with a single field:
+            file: CSV file containing transaction data.
+
+    CSV Format:
+        The CSV must contain the following headers:
+            - transaction_id
+            - timestamp (ISO 8601)
+            - amount
+            - currency
+            - customer_id
+            - product_id
+            - quantity
+
+    Response (201 Created):
+        {
+            "inserted": int,        # Number of successfully inserted transactions
+            "errors": [
+                {
+                    "line": int,
+                    "row": dict,
+                    "error": str
+                },
+                ...
+            ]
+        }
+
+    Response (400 Bad Request):
+        {
+            "error": "No file provided."
+        }
+        or
+        {
+            "error": "File is not CSV."
+        }
+
+    Notes:
+        - Each valid row in the CSV will be inserted as a `Transaction` record.
+        - Rows with errors will be logged and returned in the `errors` array with details.
+        - CSV processing continues even if some rows fail, inserting as many valid rows as possible.
+    """
     if "file" not in request.FILES:
         return JsonResponse({"error": "No file provided."}, status=400)
 

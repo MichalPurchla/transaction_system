@@ -42,7 +42,7 @@ class Transaction(models.Model):
         ("EUR", "Euro"),
     ]
 
-    transaction_id = models.UUIDField(primary_key=True, editable=False)
+    transaction_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     timestamp = models.DateTimeField()
     amount = models.DecimalField(max_digits=12, decimal_places=2)
 

@@ -19,6 +19,24 @@ EXCHANGE_RATES = {
 
 @require_GET
 def customer_summary(request, customer_id):
+    """
+    Returns a transaction summary for a given customer within an optional date range.
+
+    Query Parameters:
+        from (str, optional): Start date in YYYY-MM-DD or ISO 8601 format.
+        to (str, optional): End date in YYYY-MM-DD or ISO 8601 format.
+
+    Responses:
+        200 OK:
+            {
+                "customer_id": str,
+                "total_spent_pln": float,
+                "unique_products": int,
+                "last_transaction_date": str | null (ISO 8601)
+            }
+        404 Not Found:
+            Returned if the customer with the given ID does not exist.
+    """
     customer = get_object_or_404(Customer, id=customer_id)
 
     from_date, to_date = parse_date_range(request)
@@ -59,6 +77,24 @@ def customer_summary(request, customer_id):
 
 @require_GET
 def product_summary(request, product_id):
+    """
+    Returns a transaction summary for a given product within an optional date range.
+
+    Query Parameters:
+        from (str, optional): Start date in YYYY-MM-DD or ISO 8601 format.
+        to (str, optional): End date in YYYY-MM-DD or ISO 8601 format.
+
+    Responses:
+        200 OK:
+            {
+                "product_id": str,
+                "total_quantity_sold": int,
+                "total_revenue_pln": float,
+                "unique_customers": int
+            }
+        404 Not Found:
+            Returned if the product with the given ID does not exist.
+    """
     product = get_object_or_404(Product, id=product_id)
 
     from_date, to_date = parse_date_range(request)
