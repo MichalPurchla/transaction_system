@@ -9,6 +9,7 @@ python manage.py createsuperuser
 ```
 to create access to the admin panel.
 
+Logging was implemented using regular loggers in case of production you can implement sentry.  In the case of exposing the application to k8s, these logs will be captured by kubernetss which will enable accurate debugging. 
 
 In order to implement simple authorization, I thought the best idea would be to create a new middleware that checks for the presence of a valid token in the header before each request.
 For every request, you must add the authorization header:
