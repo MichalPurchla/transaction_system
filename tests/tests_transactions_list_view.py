@@ -6,29 +6,16 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
-from transactions.models import Customer, Product, Transaction
+from transactions.models import Transaction
 
 
 @pytest.mark.django_db
 class TestTransactionListView:
 
     def setup_method(self):
-        self.products = [
-            Product.objects.create(id=uuid4(), name=f"Test Product {i}", description=f"Super product {i}")
-            for i in range(10)
-        ]
+        self.products = [uuid4() for i in range(10)]
 
-        self.customers = [
-            Customer.objects.create(
-                id=uuid4(),
-                name=f"John Doe {i}",
-                email=f"john{i}@example.com",
-                phone_number="123456789",
-                address="Test Address",
-                is_active=True,
-            )
-            for i in range(10)
-        ]
+        self.customers = [uuid4() for i in range(10)]
 
         self.transactions = [
             Transaction.objects.create(
@@ -36,8 +23,8 @@ class TestTransactionListView:
                 timestamp=timezone.now(),
                 amount=Decimal(str(randint(101, 1001) / 100)),
                 currency="USD",
-                customer=choice(self.customers),
-                product=choice(self.products),
+                customer_id=choice(self.customers),
+                product_id=choice(self.products),
                 quantity=randint(1, 50),
             )
             for _ in range(100)

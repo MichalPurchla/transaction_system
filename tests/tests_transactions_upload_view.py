@@ -8,7 +8,7 @@ from uuid import uuid4
 import pytest
 from django.urls import reverse
 
-from transactions.models import Customer, Product, Transaction
+from transactions.models import Transaction
 
 
 @pytest.mark.django_db
@@ -17,8 +17,8 @@ class TestUploadTransactionsCSV:
     @pytest.fixture(autouse=True)
     def setup(self):
         self.url = reverse("upload_transactions_csv")
-        self.customer = Customer.objects.create(id=uuid4(), name="Test Customer", email="test@example.com")
-        self.product = Product.objects.create(id=uuid4(), name="Test Product", description="Test Description")
+        self.customer_id = uuid4()
+        self.product_id = uuid4()
 
     def create_csv_file(self, rows):
         output = io.StringIO()
@@ -50,8 +50,8 @@ class TestUploadTransactionsCSV:
             "timestamp": timestamp,
             "amount": "123.45",
             "currency": "USD",
-            "customer_id": str(self.customer.id),
-            "product_id": str(self.product.id),
+            "customer_id": str(self.customer_id),
+            "product_id": str(self.product_id),
             "quantity": "2",
         }
         csv_file = self.create_csv_file([row])
@@ -66,27 +66,6 @@ class TestUploadTransactionsCSV:
         transaction = Transaction.objects.get(transaction_id=transaction_id)
         assert transaction.amount == Decimal("123.45")
         assert transaction.currency == "USD"
-        assert transaction.customer == self.customer
-        assert transaction.product == self.product
+        assert transaction.customer_id == self.customer_id
+        assert transaction.product_id == self.product_id
         assert transaction.quantity == 2
-
-    def test_upload_csv_with_invalid_customer(self, auth_client):
-        transaction_id = uuid4()
-        timestamp = datetime.now().isoformat()
-        row = {
-            "transaction_id": str(transaction_id),
-            "timestamp": timestamp,
-            "amount": "123.45",
-            "currency": "USD",
-            "customer_id": str(uuid4()),
-            "product_id": str(self.product.id),
-            "quantity": "2",
-        }
-        csv_file = self.create_csv_file([row])
-        csv_file.name = "transactions.csv"
-
-        response = auth_client.post(self.url, {"file": csv_file})
-        assert response.status_code == 201
-        data = response.json()
-        assert data["inserted"] == 0
-        assert len(data["errors"]) == 1

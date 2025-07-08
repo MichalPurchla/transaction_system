@@ -2,6 +2,7 @@ import csv
 import io
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from logging import getLogger
 
 from django.http import Http404, JsonResponse
@@ -10,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 
-from transactions.models import Customer, Product, Transaction
+from transactions.models import Transaction
 
 logger = getLogger(__name__)
 
@@ -56,9 +57,9 @@ class TransactionListView(ListView):
         queryset = Transaction.objects.all().order_by("-timestamp")
 
         if customer_id := self.request.GET.get("customer_id"):
-            queryset = queryset.filter(customer__id=customer_id)
+            queryset = queryset.filter(customer_id=customer_id)
         if product_id := self.request.GET.get("product_id"):
-            queryset = queryset.filter(product__id=product_id)
+            queryset = queryset.filter(product_id=product_id)
 
         return queryset
 
@@ -76,8 +77,8 @@ class TransactionListView(ListView):
                     "timestamp": obj.timestamp.isoformat(),
                     "amount": str(obj.amount),
                     "currency": obj.currency,
-                    "customer_id": str(obj.customer.id),
-                    "product_id": str(obj.product.id),
+                    "customer_id": str(obj.customer_id),
+                    "product_id": str(obj.product_id),
                     "quantity": obj.quantity,
                 }
                 for obj in page.object_list
@@ -121,8 +122,8 @@ class TransactionDetailView(View):
             "timestamp": transaction.timestamp.isoformat(),
             "amount": str(transaction.amount),
             "currency": transaction.currency,
-            "customer_id": str(transaction.customer.id),
-            "product_id": str(transaction.product.id),
+            "customer_id": str(transaction.customer_id),
+            "product_id": str(transaction.product_id),
             "quantity": transaction.quantity,
         }
         return JsonResponse(data)
@@ -195,21 +196,23 @@ def upload_transactions_csv(request):
         try:
             transaction_id = uuid.UUID(row["transaction_id"])
             timestamp = datetime.fromisoformat(row["timestamp"])
-            amount = float(row["amount"])
+            amount = Decimal(row["amount"])
             currency = row["currency"].strip().upper()
             customer_id = uuid.UUID(row["customer_id"])
             product_id = uuid.UUID(row["product_id"])
             quantity = int(row["quantity"])
 
-            Transaction.objects.create(
+            transaction = Transaction(
                 transaction_id=transaction_id,
                 timestamp=timestamp,
                 amount=amount,
                 currency=currency,
-                customer=Customer.objects.get(id=customer_id),
-                product=Product.objects.get(id=product_id),
+                customer_id=customer_id,
+                product_id=product_id,
                 quantity=quantity,
             )
+            transaction.full_clean()
+            transaction.save()
             transactions_inserted += 1
         except Exception as e:
             errors.append({"line": line_number, "row": row, "error": str(e)})

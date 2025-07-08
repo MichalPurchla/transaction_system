@@ -2,11 +2,10 @@ from logging import getLogger
 
 from django.db.models import Max, Sum
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_GET
 
 from reports.utils import parse_date_range
-from transactions.models import Customer, Product, Transaction
+from transactions.models import Transaction
 
 logger = getLogger(__name__)
 
@@ -37,10 +36,9 @@ def customer_summary(request, customer_id):
         404 Not Found:
             Returned if the customer with the given ID does not exist.
     """
-    customer = get_object_or_404(Customer, id=customer_id)
 
     from_date, to_date = parse_date_range(request)
-    transactions = Transaction.objects.filter(customer=customer)
+    transactions = Transaction.objects.filter(customer_id=customer_id)
 
     if from_date:
         transactions = transactions.filter(timestamp__date__gte=from_date)
@@ -62,7 +60,7 @@ def customer_summary(request, customer_id):
         rate = EXCHANGE_RATES.get(t.currency, 1)
         total_spent += float(t.amount) * rate
 
-    unique_products = transactions.values("product").distinct().count()
+    unique_products = transactions.values("product_id").distinct().count()
     last_transaction_date = transactions.aggregate(last=Max("timestamp"))["last"]
 
     return JsonResponse(
@@ -95,10 +93,8 @@ def product_summary(request, product_id):
         404 Not Found:
             Returned if the product with the given ID does not exist.
     """
-    product = get_object_or_404(Product, id=product_id)
-
     from_date, to_date = parse_date_range(request)
-    transactions = Transaction.objects.filter(product=product)
+    transactions = Transaction.objects.filter(product_id=product_id)
 
     if from_date:
         transactions = transactions.filter(timestamp__date__gte=from_date)
@@ -122,7 +118,7 @@ def product_summary(request, product_id):
         rate = EXCHANGE_RATES.get(t.currency, 1)
         total_revenue += float(t.amount) * rate
 
-    unique_customers = transactions.values("customer").distinct().count()
+    unique_customers = transactions.values("customer_id").distinct().count()
 
     return JsonResponse(
         {

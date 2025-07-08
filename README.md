@@ -2,7 +2,7 @@
 I decided to split the application into two modules, first transactions and the other reports. Such division was due to the required to implement endpoints with prefix reports/ and transactions/. This gives a clear division of responsibilities of each application.
 Intentionally in the endpoints with reports and file loading I used function based view and in those related to downloading transactions I used class based view. Thanks to this, in the case of potentially longer responding urls only the view defined by me is executed, which shortens the response time, and in the case of ends with transactions and CBV we get automatic pagination handling.
 
-In the task I assumed that the customer and product will be separate models, which I created in a very simplified way. Therefore, loading transactions from a file requires adding customers and products to the database first. This is possible through django admin, where the models have been registered.
+You can check transactions in django admin panel.
 The default admin credentials are created by entrypoint.sh:
 ```
 http://localhost:8080/admin
