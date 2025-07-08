@@ -3,11 +3,13 @@ I decided to split the application into two modules, first transactions and the 
 Intentionally in the endpoints with reports and file loading I used function based view and in those related to downloading transactions I used class based view. Thanks to this, in the case of potentially longer responding urls only the view defined by me is executed, which shortens the response time, and in the case of ends with transactions and CBV we get automatic pagination handling.
 
 In the task I assumed that the customer and product will be separate models, which I created in a very simplified way. Therefore, loading transactions from a file requires adding customers and products to the database first. This is possible through django admin, where the models have been registered.
-After creating the virtual environment(or directly in app container), you can use the command:
+The default admin credentials are created by entrypoint.sh:
 ```
-python manage.py createsuperuser
+http://localhost:8080/admin
+user:admin
+password:admin
 ```
-to create access to the admin panel.
+
 
 ### Logging:
 Logging was implemented using regular loggers in case of production you can implement sentry.  In the case of exposing the application to k8s, these logs will be captured by kubernetss which will enable accurate debugging. 

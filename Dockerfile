@@ -18,7 +18,11 @@ RUN poetry config virtualenvs.create false \
 COPY . .
 
 FROM base as local
-ENTRYPOINT python manage.py migrate && python manage.py runserver 0.0.0.0:${PORT}
+RUN chmod +x entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD sh -c "python manage.py runserver 0.0.0.0:${PORT}"
 
 FROM base as testing
 ENTRYPOINT pytest -v --tb=short
