@@ -28,7 +28,7 @@ class TestProductSummaryView:
                 transaction_id=uuid4(),
                 timestamp=timezone.now(),
                 amount=Decimal("50.00"),
-                currency="EUR",  # przeliczone na PLN wg kursu 4.3 => 215.0
+                currency="EUR",
                 customer=self.customer,
                 product=self.product,
                 quantity=5,
@@ -43,9 +43,7 @@ class TestProductSummaryView:
         assert response.status_code == 200
         data = response.json()
         assert data["product_id"] == str(self.product.id)
-        # quantity: 2 transakcje x 5 = 10
         assert data["total_quantity_sold"] == 10
-        # revenue: 2 transakcje x 50 x 4.3 = 430
         assert data["total_revenue_pln"] == 430.0
         assert data["unique_customers"] == 1
 
