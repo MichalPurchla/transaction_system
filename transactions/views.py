@@ -37,7 +37,7 @@ class TransactionListView(ListView):
             "current_page": page.number,
             "has_next": page.has_next(),
             "has_previous": page.has_previous(),
-            "results": [
+            "transactions": [
                 {
                     "transaction_id": str(obj.transaction_id),
                     "timestamp": obj.timestamp.isoformat(),
